@@ -34,6 +34,8 @@ const user = sequelize.define("users", {
    }
 });
 
+
+
 sequelize.sync().then(() => {
    console.log('user table created successfully!');
 
