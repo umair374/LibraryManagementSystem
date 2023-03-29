@@ -19,7 +19,7 @@ module.exports = (sequelize, Sequelize) =>
         }
      });   
 
-    user.belongsTo(sequelize.models.login, { foreignKey: 'loginId' });
+    user.belongsTo(sequelize.models.login, { foreignKey: 'id' });
     return user;
   };
 

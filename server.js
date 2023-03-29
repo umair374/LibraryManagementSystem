@@ -5,6 +5,7 @@ const db = require("./models/index");
 const bookRoutes = require("./routers/book.routers");
 const loginRoutes = require("./routers/login.routers");
 const userRoutes = require("./routers/user.router");
+const indexRoutes = require("./routers/index.routers");
 
 var corsOptions = {
   origin: "http://localhost:8081",
@@ -18,6 +19,7 @@ app.use(express.json());
 // parse requests of content-type - application/x-www-form-urlencoded
 app.use(express.urlencoded({ extended: true }));
 
+app.use("/",indexRoutes);
 app.use("/books", bookRoutes);
 app.use("/logins", loginRoutes);
 app.use("/users", userRoutes);
