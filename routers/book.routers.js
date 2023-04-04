@@ -16,4 +16,8 @@ router.delete("/:id", books.delete);
 
 router.delete("/", books.deleteAll);
 
+router.get('*', function(req, res){
+    res.status(404).send(`The Url you are accessing is invalid ${req.url}`);
+  });
+
 module.exports = router;

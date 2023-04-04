@@ -30,6 +30,8 @@ router.get("/users/register",(req,res) =>
     UserRegister(req,res);
 });
 
+
+
 router.get("/users/login",(req,res) =>
 {
     UserLogin(req,res);
@@ -68,5 +70,8 @@ router.get("/users/:userId/profile", (req, res) => {
     UserPayFine(req,res);
   });
 
+  router.get('*', function(req, res){
+    res.status(404).send(`The Url you are accessing is invalid ${req.url}`);
+  });
  
 module.exports = router;
