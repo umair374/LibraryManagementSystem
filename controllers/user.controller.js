@@ -29,18 +29,44 @@ exports.create = (req, res) => {
     });
 };
 
-exports.findAll = (req, res) => {
-  const id = req.query.id;
-  var condition = id ? { id: { [Op.like]: `%${id}%` } } : null;
+// exports.findAll = (req, res) => {
+//   const id = req.query.id;
+//   var condition = id ? { id: { [Op.like]: `%${id}%` } } : null;
 
-  User.findAll({ where: condition })
+//   User.findAll({ where: condition })
+//     .then((data) => {
+//       res.send(data);
+//     })
+//     .catch((err) => {
+//       res.status(500).send({
+//         message:
+//           err.message || "Some error occurred while retrieving User.",
+//       });
+//     });
+// };
+
+exports.findAll = (req, res) => {
+  const { page, size } = req.query;
+  const limit = size ? parseInt(size) : 10;
+  const offset = page ? (parseInt(page) - 1) * limit : 0;
+
+  User.findAndCountAll({
+    limit: limit,
+    offset: offset,
+  })
     .then((data) => {
-      res.send(data);
+      const totalPages = Math.ceil(data.count / limit);
+      res.send({
+        totalItems: data.count,
+        totalPages: totalPages,
+        currentPage: page ? parseInt(page) : 1,
+        users: data.rows,
+      });
     })
     .catch((err) => {
       res.status(500).send({
         message:
-          err.message || "Some error occurred while retrieving User.",
+          err.message || "Some error occurred while retrieving User data.",
       });
     });
 };

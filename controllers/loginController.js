@@ -32,14 +32,40 @@ exports.create = (req, res) => {
     });
 };
 
-// Retrieve all LOgin info from the database.
+// // Retrieve all LOgin info from the database.
+// exports.findAll = (req, res) => {
+//   const id = req.query.id;
+//   var condition = id ? { id: { [Op.like]: `%${id}%` } } : null;
+
+//   Login.findAll({ where: condition })
+//     .then((data) => {
+//       res.send(data);
+//     })
+//     .catch((err) => {
+//       res.status(500).send({
+//         message:
+//           err.message || "Some error occurred while retrieving logins.",
+//       });
+//     });
+// };
+
+// Retrieve all Login info from the database with paging.
 exports.findAll = (req, res) => {
-  const id = req.query.id;
+  const { page, size, id } = req.query;
+  const limit = size ? parseInt(size) : 10;
+  const offset = page ? (parseInt(page) - 1) * limit : 0;
   var condition = id ? { id: { [Op.like]: `%${id}%` } } : null;
 
-  Login.findAll({ where: condition })
+  Login.findAndCountAll({ where: condition, limit, offset })
     .then((data) => {
-      res.send(data);
+      const response = {
+        totalItems: data.count,
+        totalPages: Math.ceil(data.count / limit),
+        pageSize: limit,
+        currentPage: page ? parseInt(page) : 1,
+        logins: data.rows,
+      };
+      res.send(response);
     })
     .catch((err) => {
       res.status(500).send({
@@ -48,6 +74,7 @@ exports.findAll = (req, res) => {
       });
     });
 };
+
 
 
 // Find a single login with an id

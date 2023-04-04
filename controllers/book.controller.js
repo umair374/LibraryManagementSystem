@@ -31,13 +31,43 @@ exports.create = (req, res) => {
     });
 };
 
+// exports.findAll = (req, res) => {
+//   const title = req.query.title;
+//   var condition = title ? { title: { [Op.like]: `%${title}%` } } : null;
+
+//   Book.findAll({ where: condition })
+//     .then((data) => {
+//       res.send(data);
+//     })
+//     .catch((err) => {
+//       res.status(500).send({
+//         message:
+//           err.message || "Some error occurred while retrieving tutorials.",
+//       });
+//     });
+// };
+
 exports.findAll = (req, res) => {
   const title = req.query.title;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.size) || 10;
+  const offset = (page - 1) * limit;
   var condition = title ? { title: { [Op.like]: `%${title}%` } } : null;
 
-  Book.findAll({ where: condition })
+
+  Book.findAndCountAll({ 
+    where: condition,
+    offset: offset,
+    limit: limit
+  })
     .then((data) => {
-      res.send(data);
+      const totalPages = Math.ceil(data.count / limit);
+      res.send({
+        totalItems: data.count,
+        totalPages: totalPages,
+        currentPage: page,
+        books: data.rows
+      });
     })
     .catch((err) => {
       res.status(500).send({
@@ -46,6 +76,7 @@ exports.findAll = (req, res) => {
       });
     });
 };
+
 
 exports.findOne = (req, res) => {
   const id = req.params.id;
