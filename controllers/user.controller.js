@@ -1,6 +1,71 @@
+const jwt = require('jsonwebtoken');
+const passport = require('passport');
+const JwtStrategy = require('passport-jwt').Strategy;
+const ExtractJwt = require('passport-jwt').ExtractJwt;
 const db = require("../models");
 const User = db.users;
+const Login = db.logins;
 const Op = db.Sequelize.Op;
+////////////////////////////////////////////////////
+
+// const opts = {};
+// opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
+// opts.secretOrKey = 'your_jwt_secret_key_here';
+
+// passport.use(new JwtStrategy(opts, (jwt_payload, done) => {
+//   User.findOne({ _id: jwt_payload.sub }, (err, user) => {
+//     if (err) {
+//       return done(err, false);
+//     }
+//     if (user) {
+//       return done(null, user);
+//     } else {
+//       return done(null, false);
+//     }
+//   });
+// }));
+
+
+// // Authentication middleware
+// exports.authenticate = passport.authenticate('jwt', { session: false });
+
+// // Authorization middleware
+// exports.authorize = (roles) => {
+//   return (req, res, next) => {
+//     const userRole = req.user.role;
+//     if (roles.includes(userRole)) {
+//       next();
+//     } else {
+//       res.status(401).send('Unauthorized');
+//     }
+//   };
+// };
+
+// API endpoint for user login
+exports.login = (req, res) => {
+  const username = req.body.id;
+  const password = req.body.password;
+
+  Login.findOne({ where: { id: username } })
+    .then(user => {
+      if (!user) {
+        return res.status(401).send('Invalid credentials');
+      }
+      if (!user.verifyPassword(password)) {
+        return res.status(401).send('Invalid credentials');
+      }
+
+      const payload = { sub: user.id };
+      const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+      res.send({ token });
+    })
+    .catch(err => {
+      res.status(500).send(err.message || 'Error occurred while logging in');
+    });
+};
+
+///////////////////////////////////////////////////
 
 exports.create = (req, res) => {
   if (!req.body.name) {
@@ -91,6 +156,42 @@ exports.findOne = (req, res) => {
       });
     });
 };
+
+exports.findOneFine = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    // Retrieve borrowing history and fines from database
+    // and return them in the response
+    //const borrowingHistory = await user.getBorrowingHistory();
+    const fines = await user.fine;
+    res.json({ fines });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.checkuser=async (req, res) => {
+  try {
+    const { name } = req.body;
+    const existingUser = await User.findOne({ where: { name } });
+    if (existingUser) {
+      return res.status(400).json({ message: "Username already exists" });
+    }
+    return res.status(400).json({ message: "Username doesnot exists" })
+    // const newUser = await User.create({ name });
+
+    // await Login.create({ id: newUser.id });
+    // res.json({ message: "User created successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 
 exports.update = (req, res) => {
   const id = req.params.id;
