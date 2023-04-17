@@ -6,42 +6,7 @@ const db = require("../models");
 const User = db.users;
 const Login = db.logins;
 const Op = db.Sequelize.Op;
-////////////////////////////////////////////////////
 
-// const opts = {};
-// opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
-// opts.secretOrKey = 'your_jwt_secret_key_here';
-
-// passport.use(new JwtStrategy(opts, (jwt_payload, done) => {
-//   User.findOne({ _id: jwt_payload.sub }, (err, user) => {
-//     if (err) {
-//       return done(err, false);
-//     }
-//     if (user) {
-//       return done(null, user);
-//     } else {
-//       return done(null, false);
-//     }
-//   });
-// }));
-
-
-// // Authentication middleware
-// exports.authenticate = passport.authenticate('jwt', { session: false });
-
-// // Authorization middleware
-// exports.authorize = (roles) => {
-//   return (req, res, next) => {
-//     const userRole = req.user.role;
-//     if (roles.includes(userRole)) {
-//       next();
-//     } else {
-//       res.status(401).send('Unauthorized');
-//     }
-//   };
-// };
-
-// API endpoint for user login
 exports.login = (req, res) => {
   const username = req.body.id;
   const password = req.body.password;
@@ -135,6 +100,72 @@ exports.findAll = (req, res) => {
       });
     });
 };
+
+exports.filterByName = (req, res) => {
+  const { page, size, name } = req.query;
+  const limit = size ? parseInt(size) : 10;
+  const offset = page ? (parseInt(page) - 1) * limit : 0;
+  const whereClause = name ? { name: { [Op.like]: `%${name}%` } } : {};
+
+  User.findAndCountAll({
+    limit: limit,
+    offset: offset,
+    where: whereClause,
+  })
+    .then((data) => {
+      const totalPages = Math.ceil(data.count / limit);
+      res.send({
+        totalItems: data.count,
+        totalPages: totalPages,
+        currentPage: page ? parseInt(page) : 1,
+        users: data.rows,
+      });
+    })
+    .catch((err) => {
+      res.status(500).send({
+        message:
+          err.message || "Some error occurred while retrieving User data.",
+      });
+    });
+};
+
+
+exports.filterByNameAndFine = (req, res) => {
+const { page, size, name, fine } = req.query;
+const limit = size ? parseInt(size) : 10;
+const offset = page ? (parseInt(page) - 1) * limit : 0;
+const whereClause = {};
+
+if (name) {
+  whereClause.name = { [Op.like]: `%${name}%` };
+}
+
+if (fine) {
+  whereClause.fine = { [Op.gte]: parseInt(fine) };
+}
+
+User.findAndCountAll({
+  limit: limit,
+  offset: offset,
+  where: whereClause,
+})
+    .then((data) => {
+      const totalPages = Math.ceil(data.count / limit);
+      res.send({
+        totalItems: data.count,
+        totalPages: totalPages,
+        currentPage: page ? parseInt(page) : 1,
+        users: data.rows,
+      });
+    })
+    .catch((err) => {
+      res.status(500).send({
+        message:
+          err.message || "Some error occurred while retrieving User data.",
+      });
+    });
+};
+
 
 
 exports.findOne = (req, res) => {

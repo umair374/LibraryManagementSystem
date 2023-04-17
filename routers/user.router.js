@@ -9,6 +9,10 @@ router.post("/", users.create);
 
 router.get("/", users.findAll);
 
+router.get("/filterByNameAndFine", users.filterByNameAndFine);
+
+router.get("/filterByName", users.filterByName);
+
 router.get("/:id", users.findOne);
 
 router.put("/:id", users.update);
