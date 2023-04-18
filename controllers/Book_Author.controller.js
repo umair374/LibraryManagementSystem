@@ -35,16 +35,26 @@ exports.create = (req, res) => {
 // Retrieve all Tutorials from the database.
 exports.findAll = (req, res) => {
   const Book_id = req.query.Book_id;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const offset = (page - 1) * limit;
+
   var condition = Book_id ? { Book_id: { [Op.like]: `%${Book_id}%` } } : null;
 
-  Book_Author.findAll({ where: condition })
+  Book_Author.findAndCountAll({ where: condition, limit, offset })
     .then((data) => {
-      res.send(data);
+      const totalPages = Math.ceil(data.count / limit);
+      res.send({
+        totalItems: data.count,
+        totalPages: totalPages,
+        currentPage: page,
+        bookAuthors: data.rows,
+      });
     })
     .catch((err) => {
       res.status(500).send({
         message:
-          err.message || "Some error occurred while retrieving tutorials.",
+          err.message || "Some error occurred while retrieving book authors.",
       });
     });
 };
